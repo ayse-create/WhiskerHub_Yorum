@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WhiskerHub — Yorumlar</title>
+<style>
+  :root {
+    --blue:  #CFEFFF;
+    --purple:#D8C7FF;
+    --pink:  #FFD1E8;
+    --ink:   #4a3f55;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    font-family: "Segoe UI", "Nunito", system-ui, sans-serif;
+    color: var(--ink);
+    background: #fffdfb;
+    cursor: none; /* özel imleç */
+    overflow-x: hidden;
+  }
+
+  /* yumuşak arka plan lekeleri */
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.55;
+    z-index: -1;
+    pointer-events: none;
+  }
+  body::before {
+    width: 420px; height: 420px;
+    background: var(--blue);
+    top: -140px; left: -140px;
+  }
+  body::after {
+    width: 460px; height: 460px;
+    background: var(--pink);
+    bottom: -160px; right: -140px;
+  }
+  .blob-mid {
+    position: fixed;
+    width: 380px; height: 380px;
+    border-radius: 50%;
+    background: var(--purple);
+    filter: blur(90px);
+    opacity: 0.4;
+    top: 45%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* ---- Özel imleç (1.png) ---- */
+  #cat-cursor {
+    position: fixed;
+    width: 40px; height: 40px;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.08s ease-out;
+    background: url('1.png') no-repeat center/contain;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.15));
+  }
+
+  /* ---- Header ---- */
+  header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 8px;
+    text-align: center;
+    position: relative;
+  }
+  .logo {
+    width: 88px; height: 88px;
+    background: url('2.png') no-repeat center/contain;
+    margin-bottom: 6px;
+    filter: drop-shadow(0 6px 12px rgba(216,199,255,.7));
+    animation: bob 3.2s ease-in-out infinite;
+  }
+  @keyframes bob {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-6px); }
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(28px, 6vw, 44px);
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, #8fb8d6, #a48fd8, #e79ab8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 800;
+  }
+  .subtitle {
+    margin: 6px 0 0;
+    font-size: 14px;
+    opacity: 0.7;
+  }
+
+  /* ---- WhiskerHub'a git butonu ---- */
+  .top-btn-wrap { margin-top: 18px; }
+  .btn {
+    border: none;
+    border-radius: 999px;
+    padding: 12px 26px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: none;
+    background: linear-gradient(135deg, var(--blue), var(--purple) 60%, var(--pink));
+    box-shadow: 0 8px 20px rgba(216,199,255,.55), inset 0 1px 0 rgba(255,255,255,.6);
+    transition: transform .15s ease, box-shadow .15s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 12px 26px rgba(216,199,255,.8); }
+  .btn:active { transform: scale(.97); }
+
+  /* ---- Kart ---- */
+  main {
+    display: flex;
+    justify-content: center;
+    padding: 28px 16px 80px;
+  }
+  .card {
+    width: min(560px, 100%);
+    background: rgba(255,255,255,0.78);
+    backdrop-filter: blur(14px);
+    border-radius: 28px;
+    padding: 30px 26px 34px;
+    border: 1.5px solid rgba(216,199,255,.6);
+    box-shadow: 0 20px 50px rgba(180,160,210,.25);
+    position: relative;
+  }
+  .card h2 {
+    margin: 0 0 4px;
+    font-size: 20px;
+    text-align: center;
+  }
+  .card .hint {
+    text-align: center;
+    font-size: 13px;
+    opacity: .65;
+    margin: 0 0 22px;
+  }
+
+  /* ---- Slider ---- */
+  .slider-block { margin-bottom: 26px; }
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    opacity: .6;
+    margin-bottom: 6px;
+    padding: 0 4px;
+  }
+  .slider-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .cat-face {
+    font-size: 44px;
+    width: 60px;
+    text-align: center;
+    transition: transform .2s ease;
+    user-select: none;
+    line-height: 1;
+  }
+  .cat-face.pop { transform: scale(1.2) rotate(-6deg); }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 14px;
+    border-radius: 999px;
+    outline: none;
+    background: linear-gradient(90deg, var(--pink), var(--purple), var(--blue));
+    cursor: none;
+    position: relative;
+  }
+  /* Topuz (1.png) */
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: url('1.png') no-repeat center/contain, #fff;
+    background-size: 88%, cover;
+    border: 2px solid #fff;
+    box-shadow: 0 4px 12px rgba(160,140,200,.55);
+    cursor: none;
+    transition: transform .12s ease;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.12); }
+  input[type="range"]::-moz-range-thumb {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: url('1.png') no-repeat center/contain, #fff;
+    background-size: 88%, cover;
+    border: 2px solid #fff;
+    box-shadow: 0 4px 12px rgba(160,140,200,.55);
+    cursor: none;
+  }
+
+  .score-display {
+    text-align: center;
+    font-weight: 800;
+    font-size: 15px;
+    margin-top: 10px;
+    color: #8a6fb8;
+  }
+
+  /* ---- Yorum kutusu ---- */
+  textarea {
+    width: 100%;
+    min-height: 110px;
+    resize: vertical;
+    border-radius: 18px;
+    border: 1.5px solid rgba(216,199,255,.9);
+    background: rgba(255,255,255,.85);
+    padding: 14px 16px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--ink);
+    outline: none;
+    cursor: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  textarea:focus {
+    border-color: #b8a0e8;
+    box-shadow: 0 0 0 4px rgba(216,199,255,.35);
+  }
+  textarea::placeholder { color: #b8aac9; }
+
+  /* ---- Gönder butonu ---- */
+  .submit-wrap {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+  }
+  #submitBtn {
+    min-width: 180px;
+    font-size: 16px;
+    padding: 14px 34px;
+  }
+  #submitBtn:disabled { opacity: .6; transform: none; }
+
+  /* ---- Gönderildi efekti ---- */
+  .sent-burst {
+    position: fixed;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%) scale(.4);
+    font-size: 60px;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 9998;
+  }
+  .sent-burst.show { animation: burst 1s ease forwards; }
+  @keyframes burst {
+    0%   { opacity: 0; transform: translate(-50%,-50%) scale(.4) rotate(-10deg); }
+    40%  { opacity: 1; transform: translate(-50%,-50%) scale(1.15) rotate(6deg); }
+    70%  { opacity: 1; transform: translate(-50%,-50%) scale(1) rotate(0); }
+    100% { opacity: 0; transform: translate(-50%,-120%) scale(1.1); }
+  }
+
+  /* ---- Pati efektleri ---- */
+  .paw {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9997;
+    font-size: 18px;
+    animation: pawFly .8s ease-out forwards;
+  }
+  @keyframes pawFly {
+    0%   { opacity: 1; transform: translate(0,0) scale(1) rotate(0); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(.4) rotate(var(--rot)); }
+  }
+
+  /* ---- Dekoratif kedi detayları ---- */
+  .deco-cat {
+    position: fixed;
+    opacity: .5;
+    font-size: 34px;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+    animation: floaty 5s ease-in-out infinite;
+  }
+  @keyframes floaty {
+    0%,100% { transform: translateY(0) rotate(0); }
+    50%     { transform: translateY(-14px) rotate(8deg); }
+  }
+  .deco-1 { top: 18%; left: 6%;  animation-delay: .2s; }
+  .deco-2 { top: 60%; right: 8%; animation-delay: 1.2s; font-size: 30px; }
+  .deco-3 { bottom: 12%; left: 12%; animation-delay: .7s; font-size: 26px; }
+  .deco-4 { top: 30%; right: 14%; animation-delay: 1.8s; font-size: 24px; }
+
+  /* pati izleri (statik süs) */
+  .paw-print {
+    position: fixed;
+    font-size: 16px;
+    opacity: .18;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .pp-1 { top: 10%; right: 20%; transform: rotate(20deg); }
+  .pp-2 { bottom: 20%; left: 22%; transform: rotate(-15deg); }
+  .pp-3 { top: 50%; left: 4%; transform: rotate(35deg); }
+
+  /* toast */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(120%);
+    background: #4a3f55;
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    z-index: 10000;
+    transition: transform .35s cubic-bezier(.2,1.2,.4,1);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: #d95f7a; }
+
+  @media (max-width: 480px) {
+    .deco-1, .deco-2, .deco-3, .deco-4 { display: none; }
+    .card { padding: 24px 18px 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Özel imleç -->
+<div id="cat-cursor"></div>
+
+<!-- Dekoratif kediler -->
+<div class="deco-cat deco-1">🐱</div>
+<div class="deco-cat deco-2">😺</div>
+<div class="deco-cat deco-3">🐈</div>
+<div class="deco-cat deco-4">🐾</div>
+<span class="paw-print pp-1">🐾</span>
+<span class="paw-print pp-2">🐾</span>
+<span class="paw-print pp-3">🐾</span>
+
+<div class="blob-mid"></div>
+
+<header>
+  <div class="logo" aria-label="WhiskerHub logosu"></div>
+  <h1>WhiskerHub</h1>
+  <p class="subtitle">Kediler hakkındaki düşüncelerini paylaş 🐾</p>
+
+  <div class="top-btn-wrap">
+    <button class="btn" id="gotoBtn">WhiskerHub'a Git →</button>
+  </div>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Deneyimini Puanla</h2>
+    <p class="hint">Kaydırıcıyı hareket ettir, kedi arkadaşın tepkisini görsün!</p>
+
+    <!-- Slider -->
+    <div class="slider-block">
+      <div class="slider-labels">
+        <span>😿 pek iyi değil</span>
+        <span>😻 harika!</span>
+      </div>
+      <div class="slider-wrap">
+        <div class="cat-face" id="catFace">😐</div>
+        <input type="range" id="rating" min="0" max="10" step="1" value="5" />
+      </div>
+      <div class="score-display" id="scoreDisplay">Puan: 5 / 10</div>
+    </div>
+
+    <!-- Yorum -->
+    <textarea id="comment" maxlength="500" placeholder="WhiskerHub hakkındaki yorumunu buraya yaz... 🐈"></textarea>
+
+    <div class="submit-wrap">
+      <button class="btn" id="submitBtn">Gönder 🐾</button>
+    </div>
+  </section>
+</main>
+
+<div class="sent-burst" id="sentBurst">🐾</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ============ Özel imleç takibi ============ */
+  const cursor = document.getElementById('cat-cursor');
+  document.addEventListener('mousemove', (e) => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top  = e.clientY + 'px';
+  });
+  // dokunmatik cihazlarda imleci gizle
+  if (window.matchMedia('(pointer: coarse)').matches) {
+    cursor.style.display = 'none';
+    document.body.style.cursor = 'auto';
+    document.querySelectorAll('button, input, textarea').forEach(el => el.style.cursor = 'auto');
+  }
+
+  /* ============ Pati efektleri ============ */
+  const PAW_EMOJIS = ['🐾', '🐾', '🐱', '🐈', '✨'];
+  function spawnPaws(x, y, count = 7) {
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('span');
+      p.className = 'paw';
+      p.textContent = PAW_EMOJIS[Math.floor(Math.random() * PAW_EMOJIS.length)];
+      p.style.left = x + 'px';
+      p.style.top  = y + 'px';
+      const angle = Math.random() * Math.PI * 2;
+      const dist  = 40 + Math.random() * 70;
+      p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+      p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+      p.style.setProperty('--rot', (Math.random() * 360 - 180) + 'deg');
+      p.style.fontSize = (12 + Math.random() * 12) + 'px';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 850);
+    }
+  }
+  // tüm butonlarda tıklayınca pati saç
+  document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('click', (e) => spawnPaws(e.clientX, e.clientY, 8));
+  });
+
+  /* ============ Slider + kedi yüzü ============ */
+  const rating  = document.getElementById('rating');
+  const catFace = document.getElementById('catFace');
+  const scoreDisplay = document.getElementById('scoreDisplay');
+
+  function faceForScore(v) {
+    if (v <= 1) return '😿';
+    if (v <= 3) return '🙁';
+    if (v <= 4) return '😐';
+    if (v <= 6) return '🙂';
+    if (v <= 8) return '😸';
+    return '😻';
+  }
+
+  function updateFace() {
+    const v = Number(rating.value);
+    catFace.textContent = faceForScore(v);
+    scoreDisplay.textContent = `Puan: ${v} / 10`;
+    catFace.classList.remove('pop');
+    void catFace.offsetWidth; // reflow
+    catFace.classList.add('pop');
+    setTimeout(() => catFace.classList.remove('pop'), 220);
+  }
+  rating.addEventListener('input', updateFace);
+  updateFace();
+
+  /* ============ WhiskerHub'a git ============ */
+  document.getElementById('gotoBtn').addEventListener('click', () => {
+    window.open('https://ayse-create.github.io/WhiskerHub', '_blank', 'noopener');
+  });
+
+  /* ============ Toast ============ */
+  const toast = document.getElementById('toast');
+  let toastTimer;
+  function showToast(msg, isError = false) {
+    toast.textContent = msg;
+    toast.classList.toggle('error', isError);
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+  }
+
+  /* ============ Gönderme ============ */
+  const submitBtn = document.getElementById('submitBtn');
+  const comment   = document.getElementById('comment');
+  const sentBurst = document.getElementById('sentBurst');
+
+  submitBtn.addEventListener('click', async () => {
+    const text = comment.value.trim();
+    if (!text) {
+      showToast('Lütfen önce bir yorum yaz 🐈', true);
+      comment.focus();
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Gönderiliyor...';
+
+    // Gönderildi efekti
+    sentBurst.textContent = ['🐾','😻','✨','🐱'][Math.floor(Math.random()*4)];
+    sentBurst.classList.remove('show');
+    void sentBurst.offsetWidth;
+    sentBurst.classList.add('show');
+    spawnPaws(window.innerWidth/2, window.innerHeight/2, 14);
+
+    const payload = {
+      rating: Number(rating.value),
+      comment: text,
+      timestamp: new Date().toISOString(),
+      page: 'WhiskerHub Yorum'
+    };
+
+    try {
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Sunucu hatası: ' + res.status);
+
+      showToast('Yorumun gönderildi, teşekkürler! 🐾');
+      comment.value = '';
+      rating.value = 5;
+      updateFace();
+    } catch (err) {
+      console.error(err);
+      showToast('Gönderilemedi, tekrar dene 🐾', true);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Gönder 🐾';
+    }
+  });
+</script>
+</body>
+</html>
